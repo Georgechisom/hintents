@@ -16,6 +16,14 @@ Currently, when a Soroban transaction fails on mainnet, developers receive a gen
 2.  **Local Simulation**: Re-execute the transaction logically in a local environment.
 3.  **Trace decoding**: Map execution steps and failures back to readable instructions or Rust source lines.
 
+## Usage (MVP)
+
+### Debugging a Transaction
+Fetches a transaction envelope from the Stellar Public network and prints its XDR size (Simulation pending).
+```bash
+./erst debug <transaction-hash>
+```
+
 ## Technical Analysis
 
 ### The Challenge
@@ -40,7 +48,7 @@ We are building this open-source to help the entire Stellar community.
 1.  Clone the repo:
     ```bash
     git clone https://github.com/dotandev/hintent.git
-    cd erst
+    cd simulator
     ```
 2.  Run tests:
     ```bash
