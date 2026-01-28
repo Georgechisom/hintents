@@ -77,3 +77,14 @@ See [docs/proposal.md](docs/proposal.md) for the detailed proposal.
 
 ---
 *Erst is an open-source initiative. Contributions, PRs, and Issues are welcome.*
+
+## 🚀 Version 2.0 Highlights
+
+Phase 9 introduces a stability and analytics-focused upgrade, including:
+
+- Improved system reliability and error handling
+- Enhanced analytics and telemetry support
+- UX refinements across CLI and simulator
+- Cross-environment consistency (local, Docker, CI)
+
+This release prepares the project for future scalability and feature expansion.
