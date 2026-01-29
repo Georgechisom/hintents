@@ -1,28 +1,29 @@
+// Copyright 2025 Erst Users
+// SPDX-License-Identifier: Apache-2.0
+
 package cmd
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 )
 
-var (
-	// rootCmd represents the base command when called without any subcommands
-	rootCmd = &cobra.Command{
-		Use:   "erst",
-		Short: "Stellar smart contract debugging tool",
-		Long: `Erst is a specialized developer tool for the Stellar network,
+// Version is set by main.go from build flags
+var Version = "dev"
+
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
+	Use:   "erst",
+	Short: "Erst - Soroban Error Decoder & Debugger",
+	Long: `Erst is a specialized developer tool for the Stellar network,
 designed to solve the "black box" debugging experience on Soroban.
 
 It helps clarify why a Stellar smart contract transaction failed by:
   - Fetching failed transaction envelopes and ledger state
   - Re-executing transactions locally for detailed analysis
   - Mapping execution failures back to readable source code`,
-		SilenceUsage:  true,
-		SilenceErrors: true,
-	}
-)
+	SilenceUsage:  true,
+	SilenceErrors: true,
+}
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -51,20 +52,19 @@ func RegisterCommands(root *cobra.Command) {
 	// Future commands can be registered here:
 	// registerAnalyzeCommand(root)
 	// registerReplayCommand(root)
+	// registerSessionCommand(root)
 	// registerTraceCommand(root)
 }
 
-// getErrWriter returns the error writer for commands
-func getErrWriter() *os.File {
-	return os.Stderr
+// currentSession stores the active debugging session
+var currentSession interface{}
+
+// SetCurrentSession stores the current session data
+func SetCurrentSession(session interface{}) {
+	currentSession = session
 }
 
-// getOutWriter returns the standard output writer for commands
-func getOutWriter() *os.File {
-	return os.Stdout
-}
-
-// printError prints an error message to stderr
-func printError(err error) {
-	fmt.Fprintf(getErrWriter(), "Error: %v\n", err)
+// GetCurrentSession retrieves the current session data
+func GetCurrentSession() interface{} {
+	return currentSession
 }

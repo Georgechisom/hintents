@@ -1,55 +1,93 @@
+// Copyright 2025 Erst Users
+// SPDX-License-Identifier: Apache-2.0
+
 package rpc
 
 import (
-	"fmt"
+	"context"
+	"net/http"
 
+	"github.com/dotandev/hintents/internal/errors"
+	"github.com/dotandev/hintents/internal/logger"
 	"github.com/stellar/go/clients/horizonclient"
+)
+
+// Network types for Stellar
+type Network string
+
+const (
+	Testnet   Network = "testnet"
+	Mainnet   Network = "mainnet"
+	Futurenet Network = "futurenet"
+)
+
+// Horizon URLs for each network
+const (
+	TestnetHorizonURL   = "https://horizon-testnet.stellar.org/"
+	MainnetHorizonURL   = "https://horizon.stellar.org/"
+	FuturenetHorizonURL = "https://horizon-futurenet.stellar.org/"
 )
 
 // Client handles interactions with the Stellar Network
 type Client struct {
-	Horizon *horizonclient.Client
-	Network string
+	Horizon horizonclient.ClientInterface
+	Network Network
 }
 
-// NewClient creates a new RPC client for the specified network
-func NewClient(network string) (*Client, error) {
+// NewClient creates a new RPC client with the specified network
+// If network is empty, defaults to Mainnet
+func NewClient(net Network) *Client {
+	if net == "" {
+		net = Mainnet
+	}
+
 	var horizonClient *horizonclient.Client
 
-	switch network {
-	case "testnet":
+	switch net {
+	case Testnet:
 		horizonClient = horizonclient.DefaultTestNetClient
-	case "mainnet":
-		horizonClient = horizonclient.DefaultPublicNetClient
+	case Futurenet:
+		// Create a futurenet client (not available as default)
+		horizonClient = &horizonclient.Client{
+			HorizonURL: FuturenetHorizonURL,
+			HTTP:       http.DefaultClient,
+		}
+	case Mainnet:
+		fallthrough
 	default:
-		return nil, fmt.Errorf("unsupported network: %s", network)
+		horizonClient = horizonclient.DefaultPublicNetClient
 	}
 
 	return &Client{
 		Horizon: horizonClient,
-		Network: network,
-	}, nil
+		Network: net,
+	}
 }
 
-// TransactionResponse contains the raw XDR fields needed for simulation
-type TransactionResponse struct {
-	EnvelopeXDR   string
-	ResultXDR     string
-	ResultMetaXDR string
-	Ledger        int32
+// NewClientWithURL creates a new RPC client with a custom Horizon URL
+func NewClientWithURL(url string, net Network) *Client {
+	horizonClient := &horizonclient.Client{
+		HorizonURL: url,
+		HTTP:       http.DefaultClient,
+	}
+
+	return &Client{
+		Horizon: horizonClient,
+		Network: net,
+	}
 }
 
 // GetTransaction fetches the transaction details and full XDR data
-func (c *Client) GetTransaction(hash string) (*TransactionResponse, error) {
+func (c *Client) GetTransaction(ctx context.Context, hash string) (*TransactionResponse, error) {
+	logger.Logger.Debug("Fetching transaction details", "hash", hash)
+
 	tx, err := c.Horizon.TransactionDetail(hash)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch transaction: %w", err)
+		logger.Logger.Error("Failed to fetch transaction", "hash", hash, "error", err)
+		return nil, errors.WrapTransactionNotFound(err)
 	}
 
-	return &TransactionResponse{
-		EnvelopeXDR:   tx.EnvelopeXdr,
-		ResultXDR:     tx.ResultXdr,
-		ResultMetaXDR: tx.ResultMetaXdr,
-		Ledger:        tx.Ledger,
-	}, nil
+	logger.Logger.Info("Transaction fetched successfully", "hash", hash, "envelope_size", len(tx.EnvelopeXdr))
+
+	return parseTransactionResponse(tx), nil
 }
