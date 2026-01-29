@@ -4,6 +4,7 @@
 package cache
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -111,7 +112,7 @@ func TestCleanLRU(t *testing.T) {
 	// Create test files that exceed the limit
 	// Create 3 files of 50 bytes each = 150 bytes total
 	for i := 1; i <= 3; i++ {
-		path := filepath.Join(cacheDir, "file"+string(rune(i)))
+		path := filepath.Join(cacheDir, fmt.Sprintf("file%d", i))
 		data := make([]byte, 50)
 		err := os.WriteFile(path, data, 0644)
 		require.NoError(t, err)
